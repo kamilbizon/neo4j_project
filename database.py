@@ -1,8 +1,11 @@
-import sqlite3 as lite
-from py2neo import Graph, Node, Relationship, NodeMatcher
-import pandas as pd
+from py2neo import Graph, Node, Relationship
+from datetime import datetime
 
-
+# Node types
+PARAMETER = 'Parameter'
+PLACE = 'Place'
+SENSOR = 'Sensor'
+VALUE = 'Value'
 
 def _create_and_return_greeting(tx, message):
     result = tx.run("CREATE (a:Greeting) "
@@ -13,138 +16,119 @@ def _create_and_return_greeting(tx, message):
 
 class Database:
     def __init__(self, connect):
-        try:
-            self.gdb = Graph(auth=('neo4j', 'Passw0rd'))
-            self.matcher = NodeMatcher(self.gdb)
+        self.gdb = Graph(auth=('neo4j', 'Passw0rd'))
+        print(self.gdb)
 
-            self.conn = lite.connect(connect, check_same_thread=False)
-            self.cur = self.conn.cursor()
-            print("connected to " + connect)
+    def get_names_all_nodes_of_type(self, node_type):
+        nodes = self.gdb.nodes.match(node_type)
+        nodes_names = [i["name"] for i in nodes]
+        return nodes_names
 
-            print(self.gdb)
-            self.get_all_measurements()
-        except lite.Error as e:
-            print('error: ' + str(e))
-            exit()
+    def get_node(self, node_type, name):
+        node = self.gdb.nodes.match(node_type, name=name).first()
+        return node
 
     def get_all_measurements(self):
-        sensors = list(self.matcher.match("Sensor"))
-        for s in sensors:
-            print(s)
+        sensors = self.gdb.nodes.match("Sensor")
+        table = []
 
-    def select_table(self, table, where):
-        sql = "SELECT * FROM " + table
-        if where:
-            sql += " WHERE " + where
-        sql += ";"
+        for sensor in sensors:
+            sens_and_city = []
+            all_rows = []
+            print(sensor)
 
-        print(sql)
+            #find where is placed
+            sens_and_city.append(sensor['name'])
+            sens_and_city_rel = self.gdb.match((sensor,), r_type='IS_PLACED_IN')
+            for sens_city in sens_and_city_rel:
+                sens_and_city.append(sens_city.end_node["name"])
+                print(sens_city)
 
-        try:
-            self.cur.execute(sql)
-            result = self.cur.fetchall()
-            self.conn.commit()
-        except lite.Error as e:
-            return str(e)
+            sens_and_meas_rel = self.gdb.match((None, sensor), r_type='WAS_MEASURED_BY')
+            if len(sens_and_meas_rel) == 0:
+                all_rows.append(sens_and_city)
+
+            for measure_sens in sens_and_meas_rel:
+                measure = measure_sens.nodes[0]
+
+                whole_row = []
+                whole_row.extend(sens_and_city)
+                whole_row.append(measure["value"])
+                whole_row.append(measure["time"])
+                print(measure_sens)
+
+                meas_parameter_rel = self.gdb.match((measure,), r_type='REPRESENTS')
+                for param in meas_parameter_rel:
+                    print(param)
+                    whole_row.append(param.end_node["name"])
+                all_rows.append(whole_row)
+
+            table.extend(all_rows)
+
+        print(table)
+        return table
+
+    def get_sens_params(self, sensor):
+        sensor = self.gdb.nodes.match("Sensor", name=sensor).first()
+        print(sensor)
+        relations = self.gdb.match((sensor,), r_type='MEASURES')
+        
+        result = []
+        for rel in relations:
+            result.append(rel.end_node["name"])
 
         return result
 
-    def get_table(self, table, where=""):
-        rows = self.select_table(table, where)
+    def get_measurements_for_selected_nodes(self, parameter, place, sensor):
+        sensors = self.gdb.nodes.match("Sensor", name=sensor)
+        table = []
 
-        result = "<table>"
+        for sensor in sensors:
+            sens_and_city = []
+            all_rows = []
+            print(sensor)
 
-        names = [description[0] for description in self.cur.description]
-        result += "<tr>"
-        for name in names:
-            result += "<th>" + name + "</th>"
-        result += "</tr>"
+            sens_and_city.append(sensor['name'])
+            relations = self.gdb.match((sensor,), r_type='IS_PLACED_IN')
+            for sens_city in relations:
+                sens_and_city.append(sens_city.end_node["name"])
+                print(sens_city)
 
-        for row in rows:
-            result += "<tr>"
-            for item in row:
-                result += "<td>" + str(item) + "</td>"
-            result += "</tr>"
+            relations = self.gdb.match((None, sensor), r_type='WAS_MEASURED_BY')
+            if len(relations) == 0:
+                all_rows.append(sens_and_city)
 
-        result += "</table>"
+            for measure_sens in relations:
+                measure = measure_sens.nodes[0]
 
-        return result
+                whole_row = []
+                whole_row.extend(sens_and_city)
+                whole_row.append(measure["value"])
+                whole_row.append(measure["time"])
+                print(measure_sens)
 
-    def insert_row(self, table, col_data):
-        node1 = Node("Sensor", name="sensor1")
-        node2 = Node("Parameter", name="temp", value="15.0")
-        relation = Relationship(node1, "MEASURES", node2)
-        self.gdb.create(relation)
+                parameter = self.gdb.match((measure,), r_type='REPRESENTS')
+                for param in parameter:
+                    print(param)
+                    whole_row.append(param.end_node["name"])
+                all_rows.append(whole_row)
 
-        sql = "INSERT INTO " + table
+            table.extend(all_rows)
 
-        sql += " ("
-        for key in col_data:
-            sql += key + ", "
-        sql = sql[:-2]
-        ###
-        sql += ", data"
-        ###
-        sql += ") "
+        print(table)
+        return table
 
-        sql += " VALUES ("
-        for key in col_data:
-            sql += '"' + str(col_data[key]) + '", '
-        sql = sql[:-2]
-        ###
-        sql += ", datetime('now')"
-        ###
-        sql += ")"
-        sql += ";"
-        print(sql)
-        try:
-            self.cur.execute(sql)
-            self.conn.commit()
-        except lite.Error as e:
-            return 'error: ' + str(e)
+    def insert(self, new_request):
+        time = str(datetime.now().hour) + ':' + str(datetime.now().minute)
+        node = Node(VALUE, value=new_request[VALUE], time=time)
+        print(node)
+        sensor = self.get_node(SENSOR, new_request[SENSOR])
+        print(sensor)
+        param = self.get_node(PARAMETER, new_request[PARAMETER])
+        print(param)
 
-        return "dodano"
-
-    def delete_row(self, table, where):
-        exist = self.select_table(table, where)
-        print(exist)
-        if not exist:
-            return "notatka nie istnieje"
-
-        sql = "DELETE FROM " + table
-        sql += " WHERE " + where
-        sql += ";"
-
-        print(sql)
-
-        try:
-            self.cur.execute(sql)
-            self.conn.commit()
-        except lite.Error as e:
-            return 'error: ' + str(e)
-
-        return "usunięto"
-
-    def update_row(self, table, col_data, where):
-        exist = self.select_table(table, where)
-        if not exist:
-            return "notatka nie istnieje"
-
-        sql = "UPDATE " + table
-        sql += " SET "
-        for key in col_data:
-            sql += key + " = '" + col_data[key] + "', "
-        sql = sql[:-2]
-
-        sql += " WHERE " + where
-        sql += ";"
-
-        print(sql)
-
-        try:
-            self.cur.execute(sql)
-            self.conn.commit()
-        except lite.Error as e:
-            return 'error: ' + str(e)
-
-        return "zaktualizowano"
+        node_sensor = Relationship(node, "WAS_MEASURED_BY", sensor)
+        node_param = Relationship(node, "REPRESENTS", param)
+        print(node_sensor, node_param)
+        self.gdb.create(node_sensor)
+        self.gdb.create(node_param)

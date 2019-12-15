@@ -1,0 +1,30 @@
+{% import 'macros.html' as macros %}
+
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <title>Pomiary Neo4j</title>
+      <!--link type="text/css" href="lab.css" rel="stylesheet" /-->
+      <script src="script.js" type="text/javascript"></script>
+       <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.1/build/pure-min.css" integrity="sha384-oAOxQR6DkCoMliIh8yFnu25d7Eq/PHS21PClpwjOTeU2jRSq11vu66rf90/cZr47" crossorigin="anonymous">
+   </head>
+   <body>
+     <div style="text-align:center" >
+       <table border="1" bgcolor="gray">
+         <tr><th>Pomiary. Neo4j.</th></tr>
+       </table>
+       <br />
+       <form action="#">
+          <table class="pure-table"><tr>
+          <td>{{ macros.nav_link('index', 'Index') }}</td>
+          <td>{{ macros.nav_link('get_measures', 'Pomiary') }}</td>
+          <td>{{ macros.nav_link('get_measures_params', 'Pomiary parametryczne') }}</td>
+          <td>{{ macros.nav_link('new_measure_choose_sensor', 'Nowy Pomiar') }}</td>
+          </tr></table>
+       </form>
+     </div>
+     <div id="data">{% block results %}{% endblock %}</div>
+     <div id="result"></div>
+    </body>
+</html>

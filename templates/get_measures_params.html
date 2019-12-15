@@ -1,0 +1,24 @@
+{% extends "index.html" %}
+{% block results %}
+    <form action = "http://localhost:5000/parametrized_measure" method = "POST">
+        <label class="pure-radio">Parametry
+            {% for i in parameters %}
+                <input type="radio" name="Parameter" value="{{ i }}"/>{{ i }}
+            {% endfor %}
+        </label>
+        <br/>
+        <label class="pure-radio">Miejsca
+            {% for i in places %}
+                <input type="radio" name="Place" value="{{ i }}"/>{{ i }}
+            {% endfor %}
+        </label>
+        <br/>
+        <label class="pure-radio">Sensory
+            {% for i in sensors %}
+                <input type="radio" name="Sensor" value="{{ i }}"/>{{ i }}
+            {% endfor %}
+        </label>
+        <br/>
+        <p><input type = "submit" value = "SPRAWDŹ" /></p>
+    </form>
+{% endblock %}

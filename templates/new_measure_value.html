@@ -1,0 +1,10 @@
+{% extends "index.html" %}
+{% block results %}
+    <form action = "http://localhost:5000/new_measure" method = "POST">
+        <label class="pure-form">Wartość
+            <input name="Value" type="number">
+        </label>
+        <br/>
+        <p><input type = "submit" value = "SUBMIT" /></p>
+    </form>
+{% endblock %}

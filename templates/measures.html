@@ -1,0 +1,21 @@
+{% extends "index.html" %}
+{% block results %}
+  <table class="pure-table pure-table-bordered">
+    <thead>
+      <tr>
+          {% for i in label %}
+            <th>{{i}}</th>
+          {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+    {% for i in data %}
+        <tr>
+        {% for j in i %}
+          <td>{{j}}</td>
+        {% endfor %}
+        </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
