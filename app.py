@@ -34,9 +34,10 @@ def index():
 @app.route('/measures/', methods=['GET'])
 def get_measures():
     all_meas = db.get_all_measurements()
-    DATA_TO_DELETE_FORM.extend(all_meas)
+    global DATA_TO_DELETE_FORM
+    DATA_TO_DELETE_FORM = all_meas
     print(all_meas)
-    print("ADDdDATA TO DELETE:", DATA_TO_DELETE_FORM)
+    print("ADD DATA TO DELETE:", DATA_TO_DELETE_FORM)
     return render_template('measures.html',
                            label=LABEL,
                            data=all_meas)
@@ -103,6 +104,7 @@ def delete():
     for i in parameter.keys():
         elem_to_del_index = int(i)
     print("INDEX TO DELETE:", elem_to_del_index)
+    global DATA_TO_DELETE_FORM
     if len(DATA_TO_DELETE_FORM) == 0:
         DATA_TO_DELETE_FORM.extend(db.get_all_measurements())
     print(DATA_TO_DELETE_FORM)
