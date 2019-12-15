@@ -3,19 +3,19 @@
     <form action = "http://34.89.244.26:80/parametrized_measure" method = "POST">
         <label class="pure-radio">Parametry
             {% for i in parameters %}
-                <input type="radio" name="Parameter" value="{{ i }}"/>{{ i }}
+                <input type="radio" name="Parameter" {% if i == parameters[0] %}checked{% endif %} value="{{ i }}"/>{{ i }}
             {% endfor %}
         </label>
         <br/>
         <label class="pure-radio">Miejsca
             {% for i in places %}
-                <input type="radio" name="Place" value="{{ i }}"/>{{ i }}
+                <input type="radio" name="Place" {% if i == places[0] %}checked{% endif %} value="{{ i }}"/>{{ i }}
             {% endfor %}
         </label>
         <br/>
         <label class="pure-radio">Sensory
             {% for i in sensors %}
-                <input type="radio" name="Sensor" value="{{ i }}"/>{{ i }}
+                <input type="radio" name="Sensor"  {% if i == sensors[0] %}checked{% endif %} value="{{ i }}"/>{{ i }}
             {% endfor %}
         </label>
         <br/>
