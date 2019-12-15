@@ -28,6 +28,10 @@ class Database:
         node = self.gdb.nodes.match(node_type, name=name).first()
         return node
 
+    def get_value(self, value, time):
+        node = self.gdb.nodes.match(VALUE, value=value, time=time).first()
+        return node
+
     def get_all_measurements(self):
         sensors = self.gdb.nodes.match("Sensor")
         table = []
@@ -65,7 +69,6 @@ class Database:
 
             table.extend(all_rows)
 
-        print(table)
         return table
 
     def get_sens_params(self, sensor):
@@ -88,17 +91,26 @@ class Database:
             all_rows = []
             print(sensor)
 
+            #find where is placed
             sens_and_city.append(sensor['name'])
-            relations = self.gdb.match((sensor,), r_type='IS_PLACED_IN')
-            for sens_city in relations:
+            sens_and_city_rel = self.gdb.match((sensor,), r_type='IS_PLACED_IN')
+            print(list(sens_and_city_rel))
+
+            if len(sens_and_city_rel) == 0:
+                return [[]]
+
+            for sens_city in sens_and_city_rel:
+                if sens_city.end_node["name"] != place:
+                    return [[]]
+
                 sens_and_city.append(sens_city.end_node["name"])
                 print(sens_city)
 
-            relations = self.gdb.match((None, sensor), r_type='WAS_MEASURED_BY')
-            if len(relations) == 0:
+            sens_and_meas_rel = self.gdb.match((None, sensor), r_type='WAS_MEASURED_BY')
+            if len(sens_and_meas_rel) == 0:
                 all_rows.append(sens_and_city)
 
-            for measure_sens in relations:
+            for measure_sens in sens_and_meas_rel:
                 measure = measure_sens.nodes[0]
 
                 whole_row = []
@@ -107,14 +119,16 @@ class Database:
                 whole_row.append(measure["time"])
                 print(measure_sens)
 
-                parameter = self.gdb.match((measure,), r_type='REPRESENTS')
-                for param in parameter:
-                    print(param)
-                    whole_row.append(param.end_node["name"])
-                all_rows.append(whole_row)
+                meas_parameter_rel = self.gdb.match((measure,), r_type='REPRESENTS')
+                should_add = False
+                for param in meas_parameter_rel:
+                    if param.end_node["name"] == parameter:
+                        whole_row.append(param.end_node["name"])
+                        should_add = True
+                if should_add:
+                    all_rows.append(whole_row)
 
             table.extend(all_rows)
-
         print(table)
         return table
 
@@ -132,3 +146,8 @@ class Database:
         print(node_sensor, node_param)
         self.gdb.create(node_sensor)
         self.gdb.create(node_param)
+
+    def remove_measurement(self, value, time):
+        node = self.get_value(value, time)
+        print(node)
+        self.gdb.delete(node)

@@ -1,4 +1,6 @@
 from flask import Flask, request, render_template, redirect, url_for
+from werkzeug.datastructures import ImmutableMultiDict
+
 from database import Database
 from jinja2 import Template
 
@@ -14,6 +16,7 @@ VALUE = 'Value'
 LABEL = ['sens', 'miasto', 'wartość', 'czas', 'parametr']
 
 NEW_MEASURE = {}
+DATA_TO_DELETE_FORM = []
 
 ##### GET
 
@@ -31,6 +34,9 @@ def index():
 @app.route('/measures/', methods=['GET'])
 def get_measures():
     all_meas = db.get_all_measurements()
+    print(all_meas)
+    DATA_TO_DELETE_FORM.extend(all_meas)
+    print(DATA_TO_DELETE_FORM)
     return render_template('measures.html',
                            label=LABEL,
                            data=all_meas)
@@ -88,10 +94,28 @@ def parametrized_measure():
     place = request.form[PLACE]
     sensor = request.form[SENSOR]
     out = db.get_measurements_for_selected_nodes(parameter, place, sensor)
-    return render_template('measures.html', label=LABEL, data=out)
+    return render_template('measures_parametrized.html', label=LABEL, data=out)
+
+
+@app.route('/delete/', methods=['POST'])
+def delete():
+    parameter = request.form
+    for i in parameter.keys():
+        elem_to_del_index = int(i)
+    print(elem_to_del_index)
+    if len(DATA_TO_DELETE_FORM) == 0:
+        DATA_TO_DELETE_FORM.extend(db.get_all_measurements())
+    print(DATA_TO_DELETE_FORM)
+    print(DATA_TO_DELETE_FORM[elem_to_del_index])
+    value = DATA_TO_DELETE_FORM[elem_to_del_index][2]
+    time = DATA_TO_DELETE_FORM[elem_to_del_index][3]
+    db.remove_measurement(value, time)
+    DATA_TO_DELETE_FORM.clear()
+    return redirect(url_for('index'))
 
 
 ##### CORS
+
 
 @app.after_request
 def add_headers(response):

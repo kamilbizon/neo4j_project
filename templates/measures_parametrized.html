@@ -15,11 +15,6 @@
         {% for j in i %}
           <td>{{j}}</td>
         {% endfor %}
-        {% if i|length == 5 %}
-          <td>
-              <form action="http://localhost:5000/delete" method="POST"><p><input name="{{ loop.index0 }}" type="submit" value="DELETE" /></p></form>
-          </td>
-        {% endif %}
         </tr>
     {% endfor %}
     </tbody>
