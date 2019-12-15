@@ -16,7 +16,7 @@ def _create_and_return_greeting(tx, message):
 
 class Database:
     def __init__(self, connect):
-        self.gdb = Graph(auth=('neo4j', 'neo4j'))
+        self.gdb = Graph(auth=('neo4j', 'Passw0rd'))
         print(self.gdb)
 
     def get_names_all_nodes_of_type(self, node_type):
