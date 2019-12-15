@@ -1,6 +1,6 @@
 {% extends "index.html" %}
 {% block results %}
-    <form action = "http://localhost:5000/new_measure_value" method = "POST">
+    <form action = "http://localhost:80/new_measure_value" method = "POST">
         <label class="pure-radio">Parametry
             {% for i in parameters %}
                 <input type="radio" name="Parameter"  {% if i == parameters[0] %}checked{% endif %} value="{{ i }}"/>{{ i }}

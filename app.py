@@ -129,5 +129,4 @@ def add_headers(response):
 
 
 if __name__ == '__main__':
-    # app.run(port=5579)
-    pass
+    app.run(port=80)
