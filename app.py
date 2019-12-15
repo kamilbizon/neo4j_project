@@ -35,6 +35,7 @@ def index():
 def get_measures():
     all_meas = db.get_all_measurements()
     DATA_TO_DELETE_FORM.extend(all_meas)
+    print(all_meas)
     print("ADDdDATA TO DELETE:", DATA_TO_DELETE_FORM)
     return render_template('measures.html',
                            label=LABEL,
