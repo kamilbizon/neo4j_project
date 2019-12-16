@@ -1,11 +1,9 @@
 from flask import Flask, request, render_template, redirect, url_for
-from werkzeug.datastructures import ImmutableMultiDict
 
 from database import Database
-from jinja2 import Template
 
 app = Flask(__name__)
-db = Database('sqlite.db')
+db = Database()
 
 # Node types
 PARAMETER = 'Parameter'

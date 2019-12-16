@@ -7,6 +7,7 @@ PLACE = 'Place'
 SENSOR = 'Sensor'
 VALUE = 'Value'
 
+
 def _create_and_return_greeting(tx, message):
     result = tx.run("CREATE (a:Greeting) "
                     "SET a.message = $message "
@@ -15,7 +16,7 @@ def _create_and_return_greeting(tx, message):
 
 
 class Database:
-    def __init__(self, connect):
+    def __init__(self):
         self.gdb = Graph(auth=('neo4j', 'Passw0rd'))
         print(self.gdb)
 
